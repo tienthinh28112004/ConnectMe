@@ -31,7 +31,7 @@ Server( Spring Boot) ---> Prometheus ---> Grafana
 
 **Sơ đồ hệ thống:**
 
-
+![System Diagram](./statics/diagram.png)
 
 ---
 
