@@ -1,0 +1,58 @@
+{
+  "client": {
+    "allowed_origins": [
+      "http://localhost:9000",
+      "http://localhost:3000"
+    ]
+  },
+
+  "http_server": {
+    "address": "0.0.0.0"
+  },
+
+  "http_api": {},
+
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis:6379"
+    }
+  },
+
+  "user_status": {
+    "enabled": true,
+    "redis": {
+      "address": "redis:6379"
+    },
+    "expire_interval": "24h"
+  },
+
+  "channel": {
+    "without_namespace": {
+      "presence": true,
+      "join_leave": true,
+      "force_push_join_leave": true
+    }
+  },
+
+  "admin": {
+    "enabled": true
+  },
+
+  "log": {
+    "level": "debug"
+  },
+
+  "consumers": [
+    {
+      "name": "mysql_kafka",
+      "type": "kafka",
+      "kafka": {
+        "brokers": ["kafka:9092"],
+        "topics": ["chatme.ChatMe.chat_cdc"],
+        "consumer_group": "centrifugo"
+      },
+      "enabled": true
+    }
+  ]
+}

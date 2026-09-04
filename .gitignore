@@ -1,0 +1,5 @@
+# Local secrets
+source/.env
+
+# Build output
+source/server/WeChat/target/

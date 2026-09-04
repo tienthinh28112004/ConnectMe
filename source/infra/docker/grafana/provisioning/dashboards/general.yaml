@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: ChatMe
+    orgId: 1
+    folder: ChatMe
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
