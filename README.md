@@ -1,6 +1,6 @@
 ## [Chat me]
 
-## Kiến trúc hệ thốg
+## Kiến trúc hệ thống
 
 **ChatMe** là hệ thống nhắn tin realtime được xây dựng theo kiến trúc nhiều service và triển khai bằng **Docker Compose**.
 
