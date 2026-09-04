@@ -1,21 +1,22 @@
 ## [Chat me]
 
-## MÔ TẢ HỆ THỐNG
+## Kiến trúc hệ thố
 
-Hệ thống **ChatMe** được xây dựng theo mô hình **client–server nhiều tầng**, với mục tiêu hỗ trợ nhắn tin realtime, ổn định và dễ mở rộng.s
+**ChatMe** là hệ thống nhắn tin realtime được xây dựng theo kiến trúc nhiều service và triển khai bằng **Docker Compose**.
 
-Phía **client** là ứng dụng web viết bằng **ReactJS**. Toàn bộ lưu lượng mạng từ client được điều hướng thông qua **Nginx**, đóng vai trò *gateway* và *reverse proxy*. Tại đây, Nginx phân chia luồng dữ liệu:
+- **Nginx** đóng vai trò **Reverse Proxy**, tiếp nhận traffic từ client và định tuyến REST API đến **Spring Boot Backend**, WebSocket đến **Centrifugo**.
 
-- Các request REST như `/api/...` được chuyển tiếp đến **backend Spring Boot**.
-- Các kết nối WebSocket tại `/connection/websocket` được proxy trực tiếp đến **Centrifugo**, server chuyên xử lý realtime.
+- **Spring Boot** xử lý các nghiệp vụ chính như xác thực, quản lý người dùng, phòng chat và tin nhắn; dữ liệu được lưu trữ trên **MySQL**.
 
-**Backend Spring Boot** đảm nhiệm toàn bộ phần nghiệp vụ của hệ thống: xác thực người dùng, quản lý phòng chat, xử lý gửi/nhận tin nhắn, upload file và lưu trữ dữ liệu vào **MySQL**. Khi có tin nhắn mới hoặc sự kiện realtime, backend sử dụng **HTTP API** để publish sự kiện sang Centrifugo.
+- **Centrifugo + Redis Pub/Sub** đảm nhiệm kết nối **WebSocket** và phân phối các sự kiện realtime đến client.
 
-**Centrifugo** là thành phần chịu trách nhiệm realtime. Centrifugo sử dụng **Redis** làm *Pub/Sub engine* để quản lý kết nối WebSocket, trạng thái người dùng (presence), danh sách subscriber và phân phối tin nhắn đến các client đang kết nối. Nhờ kiến trúc dựa trên Go và mô hình pub/sub qua Redis, Centrifugo có khả năng xử lý đồng thời **hàng nghìn kết nối WebSocket và lượng sự kiện lớn** mà không ảnh hưởng đến backend, giúp đảm bảo độ trễ thấp và tính ổn định trong quá trình trao đổi tin nhắn. 
+- **Kafka + Kafka Connect/Debezium** được sử dụng để theo dõi thay đổi dữ liệu từ **MySQL** thông qua **CDC (Change Data Capture)** và truyền các sự kiện thay đổi dữ liệu.
 
-Việc tích hợp **Redis** giúp Centrifugo dễ dàng **mở rộng theo chiều ngang (horizontal scaling)**. Thay vì phụ thuộc vào một server duy nhất, hệ thống có thể triển khai **nhiều instance Centrifugo** chạy song song, tạo khả năng mở rộng linh hoạt và sẵn sàng cho việc phát triển, nâng cấp kiến trúc trong tương lai.
+- **Spring Boot Actuator + Micrometer** cung cấp metrics tại endpoint `/actuator/prometheus`. **Prometheus** chủ động scrape endpoint này và lưu trữ metrics theo dạng time-series.
 
-Toàn bộ các thành phần của hệ thống gồm **Frontend React**, **Backend Spring Boot**, **Nginx**, **Centrifugo** và **Redis** đều được triển khai dưới dạng container độc lập và điều phối bằng **Docker Compose**, giúp môi trường phát triển và triển khai trở nên nhất quán, dễ chạy và dễ bảo trì.
+- **Grafana** sử dụng **Prometheus** làm data source để trực quan hóa các metrics như **HTTP Request Rate, P95 Latency, JVM Memory** và **CPU Usage**.
+
+- Các service được quản lý bằng **Docker Compose**, bao gồm network, persistent volume, health check, dependency và restart policy cho các service phù hợp.
 
 **Cấu trúc logic tổng quát:**
 ```
@@ -23,6 +24,8 @@ Client (ReactJS) <--> Nginx <--> Server (Spring Boot) <--> Database / External S
         ↑                                       |
         |                                       |
         └──────── Realtime từ Centrifugo <------┘
+
+Server( Spring Boot) ---> Prometheus ---> Grafana
  
 ```
 
